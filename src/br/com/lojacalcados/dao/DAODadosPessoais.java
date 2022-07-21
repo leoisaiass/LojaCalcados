@@ -1,6 +1,7 @@
 package br.com.lojacalcados.dao;
 import java.sql.Date;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,14 +16,40 @@ public class DAODadosPessoais extends Conexao implements ICR<DadosPessoais>{
 		try {
 			if(abrirBanco()) {
 				String query = "Insert Into dadospessoais(cpf,datanascimento,sexo)values(?,?,?)";
-				pst = cx.prepareStatement(query);
+				/*
+				 * Para executar a consulta é necessário carregá-la em
+				 * memória, assim usamos o comando prepareStatement.
+				 * Foi aplicado também o comando Statement.RETURN_GENERATED_KEYS PARA 
+				 * pegar o id gerado no momento do cadastro dos dados pessoais
+				 */
+				
+				pst = cx.prepareStatement(query,Statement.RETURN_GENERATED_KEYS);
 				pst.setString(1, obj.getCpf());
 				pst.setDate(2, (Date) obj.getDataNascimento());
 				pst.setString(3,obj.getSexo());
 				//Executar o cadastro no banco
-				int rs = pst.executeUpdate();
-				if(rs>0)
-					msg ="Dados cadastrados";
+				int r = pst.executeUpdate();
+				
+				/*
+				 * Para guardar o id gerado no momento da inserção foi executado o comando
+				 * getGeneratedkeys e alocado na variavel de resultset(rs) a coluna de id 
+				 * da tabela de dados pessoais
+				 */
+				
+				
+				
+				rs = pst.getGeneratedKeys();
+				
+				/*
+				 * Estamos verificando se o r que guarda o resultado do cadastro
+				 * é maior que zero(0) e, se for irá retornar o id gerado no momento
+				 * do cadastro. O id é do tipo Long(númerico), porém a variável */
+				
+				if(r>0) {
+					if(rs.next()) {
+						msg =String.valueOf(rs.getLong(1));
+					}
+				}
 				else 
 					msg = "Não foi possível cadastrar";				
 			}else {
@@ -117,10 +144,3 @@ public class DAODadosPessoais extends Conexao implements ICR<DadosPessoais>{
 	
 	
 }
-
-
-
-
-
-
-
